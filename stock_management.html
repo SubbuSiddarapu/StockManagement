@@ -687,8 +687,8 @@ async function loadDashboard() {
 
   const sg = document.getElementById("summary-grid");
 
-  sg.innerHTML = Object.keys(balances).map(k => {
-    const val = balances[k];
+  sg.innerHTML = ITEMS.map(it => {
+    const val = balances[it.name] || 0;
 
     const cls = val <= 0 ? "bal-low"
               : val < 5 ? "bal-warn"
@@ -696,9 +696,9 @@ async function loadDashboard() {
 
     return `
       <div class="sum-card">
-        <div class="sum-name">${k}</div>
+        <div class="sum-name">${it.name}</div>
         <div class="sum-balance ${cls}">
-          ${val.toFixed(1)}
+          ${val.toFixed(1)} <span class="sum-unit">${it.unit}</span>
         </div>
       </div>
     `;
