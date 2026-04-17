@@ -505,6 +505,7 @@ async function syncRows(rows) {
   if (!url || !rows.length) return;
   await fetch(url, {
     method:'POST', redirect:'follow',
+    mode:'no-cors',
     body: JSON.stringify({ action:'append', rows }),
   });
 }
@@ -601,63 +602,50 @@ async function submitStock(type) {
 }
 
 /* ── Report ── */
-function renderReport() {
-  const log        = loadLog();
-  const balances   = getBalances(log);
+async function renderReport() {
+  const url = getGsUrl();
+  if (!url) return;
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify({ action: "getData" })
+  });
+
+  const json = await res.json();
+  if (!json.data) return;
+
+  let rows = json.data.slice(1);
+
   const filterItem = document.getElementById('filter-item').value;
   const filterType = document.getElementById('filter-type').value;
 
-  // Balance cards
-  document.getElementById('summary-grid').innerHTML = ITEMS.map(it => {
-    const b = balances[it.id]||0;
-    const c = b<=0 ? 'bal-low' : b<5 ? 'bal-warn' : 'bal-ok';
-    return `<div class="sum-card">
-      <div class="sum-name">${it.name}</div>
-      <div class="sum-balance ${c}">${b.toFixed(1)}<span class="sum-unit">${it.unit}</span></div>
-    </div>`;
-  }).join('');
+  if (filterItem) {
+    const name = ITEMS.find(i=>i.id===filterItem)?.name;
+    rows = rows.filter(r => r[1] === name);
+  }
 
-  // Flat rows with running balance
-  let rows = [];
-  const rb     = {};
-  const lastIn = {};
-  ITEMS.forEach(it => rb[it.id] = 0);
-  [...log].reverse().forEach(e => {
-    e.items.forEach(({id,qty}) => {
-      const it = ITEMS.find(x=>x.id===id);
-      if (e.type==='in') {
-        rb[id] = (rb[id]||0)+qty; lastIn[id]=e.date;
-        rows.push({item:it, type:'in',  stockInDate:e.date, qty, outDate:null,  balance:rb[id]});
-      } else {
-        rb[id] = (rb[id]||0)-qty;
-        rows.push({item:it, type:'out', stockInDate:lastIn[id]||null, qty, outDate:e.date, balance:rb[id]});
-      }
-    });
-  });
-  rows.reverse();
-  if (filterItem) rows = rows.filter(r=>r.item.id===filterItem);
-  if (filterType) rows = rows.filter(r=>r.type===filterType);
+  if (filterType) {
+    rows = rows.filter(r => r[2].toLowerCase().includes(filterType));
+  }
 
-  const tbody = document.getElementById('report-body');
+  const tbody = document.getElementById("report-body");
+
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-msg">No records yet. Record stock in or out to see data here.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-msg">No data</td></tr>`;
     return;
   }
-  tbody.innerHTML = rows.map(r => {
-    const badge = r.type==='in'
-      ? `<span class="badge badge-in">In</span>`
-      : `<span class="badge badge-out">Out</span>`;
-    const bc = (r.balance||0)<=0 ? 'bal-low' : r.balance<5 ? 'bal-warn' : 'bal-ok';
-    return `<tr>
-      <td style="white-space:nowrap">${fmtDT(r.stockInDate)}</td>
-      <td><strong>${r.item.name}</strong></td>
-      <td>${badge}</td>
-      <td>${r.type==='in'  ? r.qty.toFixed(1)+' '+r.item.unit : '–'}</td>
-      <td>${r.type==='out' ? r.qty.toFixed(1)+' '+r.item.unit : '–'}</td>
-      <td style="white-space:nowrap">${r.type==='out' ? fmtDT(r.outDate) : '–'}</td>
-      <td><span class="${bc}" style="font-weight:600">${(r.balance||0).toFixed(1)} ${r.item.unit}</span></td>
-    </tr>`;
-  }).join('');
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r[0]}</td>
+      <td><strong>${r[1]}</strong></td>
+      <td>${r[2]}</td>
+      <td>${r[3] || "-"}</td>
+      <td>${r[4] || "-"}</td>
+      <td>${r[5] || "-"}</td>
+      <td>${r[6]}</td>
+    </tr>
+  `).join("");
 }
 
 function exportCSV() {
@@ -685,6 +673,47 @@ function exportCSV() {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
+async function loadDashboard() {
+  const url = getGsUrl();
+  if (!url) return;
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify({ action: "getDashboard" })
+  });
+
+  const json = await res.json();
+  const balances = json.balances || {};
+
+  const sg = document.getElementById("summary-grid");
+
+  sg.innerHTML = Object.keys(balances).map(k => {
+    const val = balances[k];
+
+    const cls = val <= 0 ? "bal-low"
+              : val < 5 ? "bal-warn"
+              : "bal-ok";
+
+    return `
+      <div class="sum-card">
+        <div class="sum-name">${k}</div>
+        <div class="sum-balance ${cls}">
+          ${val.toFixed(1)}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  checkLowStock(balances);
+}
+
+function checkLowStock(balances) {
+  Object.keys(balances).forEach(item => {
+    if (balances[item] < 5) {
+      console.warn("LOW STOCK:", item);
+    }
+  });
+}
 /* ── Tabs ── */
 function switchTab(t) {
   document.querySelectorAll('.tab-pane').forEach(el=>el.classList.remove('active'));
@@ -695,7 +724,8 @@ function switchTab(t) {
     document.getElementById('filter-item').innerHTML =
       '<option value="">All items</option>'+
       ITEMS.map(it=>`<option value="${it.id}">${it.name}</option>`).join('');
-    renderReport();
+    loadDashboard();
+	renderReport();
   }
 }
 
@@ -707,6 +737,10 @@ document.getElementById('header-date').innerHTML =
 buildGrid('in');
 buildGrid('out');
 updatePill();
+setInterval(() => {
+  loadDashboard();
+  renderReport();
+}, 10000);
 </script>
 </body>
 </html>
