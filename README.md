@@ -43,3 +43,63 @@ function doGet(e) {
     .createTextOutput(JSON.stringify({ status:"ok", message:"Stock API ready" }))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+v2
+const SHEET_NAME = "stock";
+const LOW_STOCK_THRESHOLD = 5;
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+
+    if (!sheet) return json({ status:"error", message:"Sheet not found" });
+
+    // INSERT
+    if (data.action === "append") {
+      const rows = data.rows;
+
+      if (rows.length) {
+        sheet.getRange(sheet.getLastRow()+1,1,rows.length,rows[0].length).setValues(rows);
+      }
+
+      return json({ status:"ok" });
+    }
+
+    // GET DATA
+    if (data.action === "getData") {
+      return json({ status:"ok", data: sheet.getDataRange().getValues() });
+    }
+
+    // DASHBOARD
+    if (data.action === "getDashboard") {
+      const dataRows = sheet.getDataRange().getValues().slice(1);
+      const balances = {};
+
+      dataRows.forEach(r => {
+        const item = r[1];
+        const inQty = parseFloat(r[3]) || 0;
+        const outQty = parseFloat(r[4]) || 0;
+
+        if (!balances[item]) balances[item] = 0;
+        balances[item] += inQty - outQty;
+      });
+
+      return json({ status:"ok", balances });
+    }
+
+    return json({ status:"error", message:"Unknown action" });
+
+  } catch(err) {
+    return json({ status:"error", message:err.toString() });
+  }
+}
+
+function doGet() {
+  return json({ status:"ok", message:"API ready" });
+}
+
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
