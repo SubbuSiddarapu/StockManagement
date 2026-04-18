@@ -60,6 +60,7 @@
     background: var(--blue-bg); border: 1px solid #B8D0F5;
     border-radius: var(--radius); padding: 1.25rem 1.5rem;
     margin-bottom: 1.75rem; display: none;
+	style="display:none"
   }
   .gs-panel.open { display: block; }
   .gs-panel-title {
@@ -260,7 +261,6 @@
       <div class="header-title">Stock Management</div>
       <div class="header-sub">Inventory Tracker</div>
     </div>
-    <button class="gs-status-pill" onclick="toggleGsPanel()">
       <span class="gs-dot" id="gs-dot"></span>
       <span id="gs-pill-label">Connect Google Sheets</span>
     </button>
@@ -353,8 +353,6 @@ function doGet(e) {
     <div class="gs-input-row" style="margin-top:12px">
       <input class="gs-url-input" id="gs-url-input" type="url"
         placeholder="https://script.google.com/macros/s/AKfyc…/exec" />
-      <button class="btn-gs-save" onclick="saveGsUrl()">Save &amp; Test</button>
-      <button class="btn-gs-clear" id="btn-gs-clear" onclick="clearGsUrl()">Disconnect</button>
     </div>
     <div class="gs-test-result" id="gs-test-result"></div>
   </div>
@@ -436,23 +434,14 @@ const GS_KEY = 'stocklog_gsurl';
 /* ── Storage helpers ── */
 function loadLog()    { try { return JSON.parse(localStorage.getItem(KEY)||'[]'); } catch(e){ return []; } }
 function saveLog(l)   { localStorage.setItem(KEY, JSON.stringify(l)); }
-function getGsUrl()   { return localStorage.getItem(GS_KEY)||''; }
-function setGsUrl(u)  { localStorage.setItem(GS_KEY, u); }
-function delGsUrl()   { localStorage.removeItem(GS_KEY); }
+function getGsUrl()   { return "https://script.google.com/macros/s/AKfycbzD9n9cCRnbRIogzc3yvL4AUVNSSSv2RHkXT7rrVwh_rWfegxYRB8-WppmF01nvMsgwbA/exec"; }
 
 /* ── Google Sheets panel ── */
 let panelOpen = false;
-function toggleGsPanel() {
-  panelOpen = !panelOpen;
-  document.getElementById('gs-panel').classList.toggle('open', panelOpen);
-}
 
 function updatePill() {
-  const url = getGsUrl();
-  document.getElementById('gs-dot').className       = 'gs-dot' + (url ? ' connected' : '');
-  document.getElementById('gs-pill-label').textContent = url ? 'Google Sheets connected' : 'Connect Google Sheets';
-  document.getElementById('btn-gs-clear').style.display = url ? 'inline-block' : 'none';
-  if (url) document.getElementById('gs-url-input').value = url;
+  document.getElementById('gs-dot').className = 'gs-dot connected';
+  document.getElementById('gs-pill-label').textContent = 'Google Sheets connected';
 }
 
 function setTestResult(msg, cls) {
@@ -460,33 +449,6 @@ function setTestResult(msg, cls) {
   el.textContent  = msg;
   el.className    = 'gs-test-result' + (cls ? ' ' + cls : '');
   el.style.display = msg ? 'block' : 'none';
-}
-
-async function saveGsUrl() {
-  const url = document.getElementById('gs-url-input').value.trim();
-  if (!url.startsWith('https://script.google.com')) {
-    setTestResult('Please enter a valid Google Apps Script Web app URL.', 'fail'); return;
-  }
-  setGsUrl(url); updatePill();
-  setTestResult('Testing connection…', 'info');
-  try {
-    const res  = await fetch(url, { method:'GET', redirect:'follow' });
-    const json = await res.json();
-    if (json && json.status === 'ok') {
-      setTestResult('✓ Connected! Every Stock In/Out will now sync to your Google Sheet.', 'ok');
-    } else {
-      setTestResult('Reached the URL but got an unexpected response. Check the Apps Script code and redeploy.', 'fail');
-    }
-  } catch(err) {
-    setTestResult('Could not reach the URL. Ensure deployment access is set to "Anyone". (' + err.message + ')', 'fail');
-  }
-}
-
-function clearGsUrl() {
-  delGsUrl();
-  document.getElementById('gs-url-input').value = '';
-  setTestResult('', '');
-  updatePill();
 }
 
 function copyScript() {
