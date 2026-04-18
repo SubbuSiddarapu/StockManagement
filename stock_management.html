@@ -1,142 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stock Management</title>
+
 <style>
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f5f3ef;
-  margin: 0;
-}
-
-.container {
-  max-width: 1100px;
-  margin: auto;
-  padding: 20px;
-}
-
-h2 {
-  margin-bottom: 20px;
-}
+body { font-family: Arial; background:#f3f1ec; margin:0; }
+.header { background:#5b3a2e; color:#fff; padding:15px; }
+.container { padding:20px; }
 
 .card {
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 18px;
-  margin-bottom: 20px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-}
-
-h3 {
-  margin-bottom: 12px;
+  background:#fff;
+  border-radius:12px;
+  padding:15px;
+  margin-bottom:20px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
 
 input, select {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  margin-right: 10px;
-  margin-top: 6px;
+  padding:8px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  margin:5px;
 }
 
 button {
-  background: #6b3e2e;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
+  background:#5b3a2e;
+  color:#fff;
+  border:none;
+  padding:10px 15px;
+  border-radius:6px;
 }
 
-button:hover {
-  background: #5a3426;
+.dashboard {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
 }
 
-#dashboard {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+.tile {
+  background:#f7f5f1;
+  padding:10px;
+  border-radius:8px;
+  min-width:120px;
 }
 
-.balance-card {
-  background: #f8f6f2;
-  border-radius: 10px;
-  padding: 12px;
-  min-width: 150px;
-}
-
-.balance-card b {
-  font-size: 18px;
-  color: #2e7d32;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-th {
-  background: #eee;
-}
-
-td, th {
-  padding: 8px;
-  border: 1px solid #ddd;
-}
-
-.low-stock {
-  color: red;
-  font-weight: bold;
-}
+.low { color:red; }
 </style>
 </head>
+
 <body>
 
-<div class="container">
-
+<div class="header">
 <h2>Stock Management</h2>
+</div>
+
+<div class="container">
 
 <!-- STOCK IN -->
 <div class="card">
 <h3>Stock In</h3>
-<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-<select id="item-in"></select>
-<input type="text" id="new-item-in" placeholder="New Item Name" style="display:none"/>
-<input type="number" id="qty-in" placeholder="Quantity"/>
+
+<select id="item-in" onchange="handleNewItem(this.value,'in')"></select>
+<input type="text" id="new-item-in" placeholder="New Item" style="display:none">
+<input type="number" id="qty-in" placeholder="Quantity">
 <button onclick="submitStock('in')">Add Stock</button>
+
 </div>
 
 <!-- STOCK OUT -->
 <div class="card">
 <h3>Stock Out</h3>
-<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-<select id="item-out"></select>
-<input type="text" id="new-item-out" placeholder="New Item Name" style="display:none"/>
-<input type="number" id="qty-out" placeholder="Quantity"/>
-<input type="text" id="branch" placeholder="Branch Name"/>
+
+<select id="item-out" onchange="handleNewItem(this.value,'out')"></select>
+<input type="text" id="new-item-out" placeholder="New Item" style="display:none">
+<input type="number" id="qty-out" placeholder="Quantity">
+<input type="text" id="branch" placeholder="Branch Name">
 <button onclick="submitStock('out')">Consume Stock</button>
-</div>
+
 </div>
 
 <!-- DASHBOARD -->
 <div class="card">
 <h3>Current Balance</h3>
-<div id="dashboard"></div>
+<div id="dashboard" class="dashboard"></div>
 </div>
 
 <!-- REPORT -->
 <div class="card">
 <h3>Report</h3>
 <table border="1" width="100%">
-<thead>
 <tr>
 <th>Date</th><th>Item</th><th>Type</th>
-<th>Qty In</th><th>Qty Out</th>
-<th>Branch</th><th>Balance</th>
+<th>Qty In</th><th>Qty Out</th><th>Branch</th><th>Balance</th>
 </tr>
-</thead>
 <tbody id="report"></tbody>
 </table>
 </div>
@@ -145,69 +102,64 @@ td, th {
 
 <script>
 
-/* 🔗 GOOGLE SCRIPT URL */
-const API = "https://script.google.com/macros/s/AKfycbzD9n9cCRnbRIogzc3yvL4AUVNSSSv2RHkXT7rrVwh_rWfegxYRB8-WppmF01nvMsgwbA/exec";
+const API = "https://script.google.com/macros/s/AKfycbXXXXXXXX/exec";
 
-/* 📦 ITEMS */
 let ITEMS = [
-  "Rice – Tajmahala",
-  "Rice – Pusagold",
-  "Rice – Finest",
-  "Oil","Milk","Ghee","Vegetables"
+"Rice – Tajmahala","Rice – Pusagold","Rice – Finest",
+"Oil","Milk","Ghee","Vegetables"
 ];
 
-/* 🔄 INIT */
-function init() {
-  renderDropdowns();
+function init(){
+  renderItems();
   loadDashboard();
   loadReport();
 }
 init();
 
-/* 🧩 DROPDOWN */
-function renderDropdowns() {
+function renderItems(){
   const opts = ITEMS.map(i=>`<option>${i}</option>`).join("") +
-               `<option value="NEW">+ Add New Item</option>`;
+               `<option value="NEW">+ Add New</option>`;
 
   document.getElementById("item-in").innerHTML = opts;
   document.getElementById("item-out").innerHTML = opts;
-
-  document.getElementById("item-in").onchange = e=>{
-    document.getElementById("new-item-in").style.display =
-      e.target.value==="NEW"?"block":"none";
-  };
-
-  document.getElementById("item-out").onchange = e=>{
-    document.getElementById("new-item-out").style.display =
-      e.target.value==="NEW"?"block":"none";
-  };
 }
 
-/* 🚀 SUBMIT */
-async function submitStock(type) {
+function handleNewItem(val,type){
+  document.getElementById(`new-item-${type}`).style.display =
+    val==="NEW"?"block":"none";
+}
+
+async function submitStock(type){
 
   let item = document.getElementById(`item-${type}`).value;
-  let newItem = document.getElementById(`new-item-${type}`).value;
-  let qty = parseFloat(document.getElementById(`qty-${type}`).value);
+  const newItem = document.getElementById(`new-item-${type}`).value;
 
-  if (item==="NEW") {
+  if(item==="NEW"){
     item = newItem;
-    if (!ITEMS.includes(item)) ITEMS.push(item);
-    renderDropdowns();
+    if(!ITEMS.includes(item)){
+      ITEMS.push(item);
+      renderItems();
+    }
   }
 
-  if (!qty || qty<=0) return alert("Enter quantity");
+  const qty = Number(document.getElementById(`qty-${type}`).value);
+  const branch = document.getElementById("branch").value;
 
-  // 🔥 CHECK STOCK BEFORE OUT
-  if (type==="out") {
-    const ok = await checkStock(item, qty);
-    if (!ok) {
-      alert("❌ Not enough stock. Add Stock In");
+  if(!qty) return alert("Enter quantity");
+
+  // ❌ Prevent negative
+  if(type==="out"){
+    const res = await fetch(API,{method:"POST",body:JSON.stringify({action:"getDashboard"})});
+    const data = await res.json();
+    const bal = data.balances[item]||0;
+
+    if(bal < qty){
+      alert("❌ Not enough stock");
       return;
     }
   }
 
-  const res = await fetch(API,{
+  await fetch(API,{
     method:"POST",
     body:JSON.stringify({
       action:"append",
@@ -218,44 +170,33 @@ async function submitStock(type) {
         type==="in"?qty:"",
         type==="out"?qty:"",
         new Date().toISOString(),
-        document.getElementById("branch").value || "",
+        branch,
         ""
       ]]
     })
   });
 
-  alert("Saved!");
-
   loadDashboard();
   loadReport();
 }
 
-/* 📊 DASHBOARD */
-async function loadDashboard() {
-  const res = await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({action:"getDashboard"})
-  });
-
+async function loadDashboard(){
+  const res = await fetch(API,{method:"POST",body:JSON.stringify({action:"getDashboard"})});
   const data = await res.json();
-  const b = data.balances;
 
   document.getElementById("dashboard").innerHTML =
-  Object.keys(b).map(k=>`
-    <div class="balance-card">
-      <div>${k}</div>
-      <b class="${b[k] < 5 ? 'low-stock' : ''}">${b[k]}</b>
-    </div>
-  `).join("");
+    Object.keys(data.balances).map(k=>`
+      <div class="tile">
+        ${k}<br>
+        <b class="${data.balances[k]<5?'low':''}">
+          ${data.balances[k]}
+        </b>
+      </div>
+    `).join("");
 }
 
-/* 📋 REPORT */
-async function loadReport() {
-  const res = await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({action:"getData"})
-  });
-
+async function loadReport(){
+  const res = await fetch(API,{method:"POST",body:JSON.stringify({action:"getData"})});
   const data = await res.json();
 
   document.getElementById("report").innerHTML =
@@ -272,17 +213,7 @@ async function loadReport() {
     `).join("");
 }
 
-/* 🚫 NEGATIVE CHECK */
-async function checkStock(item, qty) {
-  const res = await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({action:"getDashboard"})
-  });
-
-  const data = await res.json();
-  return (data.balances[item] || 0) >= qty;
-}
-
 </script>
+
 </body>
 </html>
