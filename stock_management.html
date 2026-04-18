@@ -440,10 +440,21 @@ function getGsUrl()   { return "https://script.google.com/macros/s/AKfycbzD9n9cC
 /* ── Google Sheets panel ── */
 let panelOpen = false;
 
-function updatePill() {
-  document.getElementById('gs-dot').className = 'gs-dot connected';
-  document.getElementById('gs-pill-label').textContent = 'Google Sheets connected';
-  document.getElementById('gs-panel').style.display = 'none';
+async function updatePill() {
+  const url = getGsUrl();
+
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+
+    if (json.status === "ok") {
+      document.getElementById('gs-dot').className = 'gs-dot connected';
+      document.getElementById('gs-pill-label').textContent = 'Google Sheets connected';
+    }
+  } catch (e) {
+    document.getElementById('gs-dot').className = 'gs-dot error';
+    document.getElementById('gs-pill-label').textContent = 'Connection failed';
+  }
 }
 
 function setTestResult(msg, cls) {
