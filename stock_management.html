@@ -60,7 +60,7 @@
     background: var(--blue-bg); border: 1px solid #B8D0F5;
     border-radius: var(--radius); padding: 1.25rem 1.5rem;
     margin-bottom: 1.75rem; display: none;
-	style="display:none"
+	display: none;
   }
   .gs-panel.open { display: block; }
   .gs-panel-title {
@@ -261,9 +261,10 @@
       <div class="header-title">Stock Management</div>
       <div class="header-sub">Inventory Tracker</div>
     </div>
-      <span class="gs-dot" id="gs-dot"></span>
-      <span id="gs-pill-label">Connect Google Sheets</span>
-    </button>
+      <div class="gs-status-pill">
+  		<span class="gs-dot" id="gs-dot"></span>
+  		<span id="gs-pill-label">Google Sheets connected</span>
+	  </div>>
   </div>
   <div class="header-date" id="header-date"></div>
 </div>
@@ -442,6 +443,7 @@ let panelOpen = false;
 function updatePill() {
   document.getElementById('gs-dot').className = 'gs-dot connected';
   document.getElementById('gs-pill-label').textContent = 'Google Sheets connected';
+  document.getElementById('gs-panel').style.display = 'none';
 }
 
 function setTestResult(msg, cls) {
