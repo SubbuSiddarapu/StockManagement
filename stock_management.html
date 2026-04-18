@@ -5,11 +5,91 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Stock Management</title>
 <style>
-body { font-family: Arial; background:#f5f5f5; }
-.container { max-width:900px; margin:auto; padding:20px; }
-.card { background:#fff; padding:15px; margin:10px 0; border-radius:8px; }
-input { padding:8px; margin:5px; }
-button { padding:10px 15px; cursor:pointer; }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f5f3ef;
+  margin: 0;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+h3 {
+  margin-bottom: 12px;
+}
+
+input, select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-right: 10px;
+  margin-top: 6px;
+}
+
+button {
+  background: #6b3e2e;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #5a3426;
+}
+
+#dashboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.balance-card {
+  background: #f8f6f2;
+  border-radius: 10px;
+  padding: 12px;
+  min-width: 150px;
+}
+
+.balance-card b {
+  font-size: 18px;
+  color: #2e7d32;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th {
+  background: #eee;
+}
+
+td, th {
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.low-stock {
+  color: red;
+  font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -21,26 +101,23 @@ button { padding:10px 15px; cursor:pointer; }
 <!-- STOCK IN -->
 <div class="card">
 <h3>Stock In</h3>
-
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
 <select id="item-in"></select>
 <input type="text" id="new-item-in" placeholder="New Item Name" style="display:none"/>
 <input type="number" id="qty-in" placeholder="Quantity"/>
 <button onclick="submitStock('in')">Add Stock</button>
-
 </div>
 
 <!-- STOCK OUT -->
 <div class="card">
 <h3>Stock Out</h3>
-
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
 <select id="item-out"></select>
 <input type="text" id="new-item-out" placeholder="New Item Name" style="display:none"/>
-
 <input type="number" id="qty-out" placeholder="Quantity"/>
 <input type="text" id="branch" placeholder="Branch Name"/>
-
 <button onclick="submitStock('out')">Consume Stock</button>
-
+</div>
 </div>
 
 <!-- DASHBOARD -->
@@ -164,7 +241,12 @@ async function loadDashboard() {
   const b = data.balances;
 
   document.getElementById("dashboard").innerHTML =
-    Object.keys(b).map(k=>`<div>${k}: <b>${b[k]}</b></div>`).join("");
+  Object.keys(b).map(k=>`
+    <div class="balance-card">
+      <div>${k}</div>
+      <b class="${b[k] < 5 ? 'low-stock' : ''}">${b[k]}</b>
+    </div>
+  `).join("");
 }
 
 /* 📋 REPORT */
