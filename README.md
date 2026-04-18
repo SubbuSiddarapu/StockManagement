@@ -11,6 +11,730 @@ https://script.google.com/macros/s/AKfycbzDm3odQUEMqQniQ1Tx__PtRpjsuelZY8BB5VoHi
 
 file:///G:/My%20Drive/001MYINFO/Naakistam/Restaurant/StockManagement/stock_management.html
 
+v3
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stock Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --border: #E2DDD5;
+    --border2: #CEC8BC;
+    --text: #1A1814;
+    --text2: #6B6458;
+    --text3: #9E9688;
+    --green: #2D6A4F;
+    --green-bg: #D8F3DC;
+    --red: #9B2226;
+    --red-bg: #FFE8E8;
+    --amber: #7D4E00;
+    --amber-bg: #FFF3CD;
+    --blue: #1A4A8A;
+    --blue-bg: #E8F0FC;
+    --accent: #3D2B1F;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+
+  .header {
+    background: var(--accent); color: #fff;
+    padding: 1.1rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-title { font-family: 'DM Serif Display', serif; font-size: 1.35rem; }
+  .header-sub { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+  .header-date { font-size: 11px; opacity: 0.65; text-align: right; }
+  .gs-status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.25); background: transparent; color: #fff;
+    transition: background 0.15s;
+  }
+  .gs-status-pill:hover { background: rgba(255,255,255,0.1); }
+  .gs-dot { width: 7px; height: 7px; border-radius: 50%; background: #888; flex-shrink: 0; }
+  .gs-dot.connected { background: #5DD47A; }
+  .gs-dot.error { background: #FF6B6B; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.75rem 1.5rem; }
+
+  /* Google Sheets panel */
+  .gs-panel {
+    background: var(--blue-bg); border: 1px solid #B8D0F5;
+    border-radius: var(--radius); padding: 1.25rem 1.5rem;
+    margin-bottom: 1.75rem; display: none;
+	display: none;
+  }
+  .gs-panel.open { display: block; }
+  .gs-panel-title {
+    font-size: 13px; font-weight: 700; color: var(--blue);
+    display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+  }
+  .gs-steps { margin-bottom: 14px; }
+  .gs-step {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 9px 0; border-bottom: 1px solid #D4E4F8;
+    font-size: 13px; color: var(--text2); line-height: 1.6;
+  }
+  .gs-step:last-child { border-bottom: none; }
+  .gs-step-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--blue); color: #fff;
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .gs-step a { color: var(--blue); font-weight: 600; }
+  .gs-step code {
+    background: #fff; border: 1px solid #B8D0F5;
+    border-radius: 4px; padding: 1px 6px; font-size: 11.5px;
+    font-family: monospace; color: var(--accent); word-break: break-all;
+  }
+  .gs-input-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .gs-url-input {
+    flex: 1; min-width: 260px; padding: 9px 12px;
+    border: 1px solid #B8D0F5; border-radius: var(--radius-sm);
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    background: #fff; color: var(--text);
+  }
+  .gs-url-input:focus { outline: none; border-color: var(--blue); }
+  .btn-gs-save {
+    padding: 9px 20px; background: var(--blue); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; white-space: nowrap;
+  }
+  .btn-gs-save:hover { opacity: 0.88; }
+  .btn-gs-clear {
+    padding: 9px 14px; background: transparent; color: var(--red);
+    border: 1px solid #FFBDBD; border-radius: var(--radius-sm);
+    font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    white-space: nowrap; display: none;
+  }
+  .btn-gs-clear:hover { background: var(--red-bg); }
+  .gs-test-result { margin-top: 10px; font-size: 12px; font-weight: 500; display: none; }
+  .gs-test-result.ok   { color: var(--green); display: block; }
+  .gs-test-result.fail { color: var(--red); display: block; }
+  .gs-test-result.info { color: var(--blue); display: block; }
+
+  details { margin: 8px 0; }
+  details summary {
+    cursor: pointer; font-size: 12px; color: var(--blue);
+    font-weight: 600; user-select: none; padding: 4px 0;
+  }
+  .code-block {
+    background: #1E1E2E; color: #CDD6F4;
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    font-size: 11px; font-family: monospace; line-height: 1.65;
+    overflow-x: auto; margin: 8px 0; white-space: pre;
+  }
+  .copy-code-btn {
+    padding: 5px 12px; background: var(--blue); color: #fff;
+    border: none; border-radius: 5px; font-size: 11px; font-weight: 600;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    display: inline-block; margin-bottom: 8px;
+  }
+  .copy-code-btn:hover { opacity: 0.85; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 4px; background: var(--surface2);
+    border-radius: var(--radius); padding: 5px;
+    margin-bottom: 1.75rem; border: 1px solid var(--border);
+  }
+  .tab-btn {
+    flex: 1; padding: 10px 16px; border: none;
+    border-radius: var(--radius-sm); background: transparent;
+    color: var(--text2); font-size: 14px; font-weight: 500;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.18s;
+  }
+  .tab-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text3); margin-bottom: 14px;
+  }
+
+  .item-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px; margin-bottom: 1.75rem;
+  }
+  .item-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .item-card:hover { border-color: var(--border2); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .item-card:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(61,43,31,0.1); }
+  .item-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .input-row { display: flex; align-items: center; gap: 8px; }
+  .qty-input {
+    flex: 1; padding: 7px 10px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 15px;
+    font-family: 'DM Sans', sans-serif; background: var(--bg);
+    color: var(--text); text-align: right; transition: border-color 0.15s; min-width: 0;
+  }
+  .qty-input:focus { outline: none; border-color: var(--accent); background: #fff; }
+  .unit-badge {
+    font-size: 11px; font-weight: 600; color: var(--text3);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 5px; padding: 3px 7px; white-space: nowrap;
+  }
+
+  .action-bar { display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 1rem 0 0.25rem; }
+  .toast { font-size: 13px; font-weight: 500; color: var(--green); opacity: 0; transition: opacity 0.3s; }
+  .toast.visible { opacity: 1; }
+  .sync-note { font-size: 12px; margin-right: auto; color: var(--text3); }
+  .sync-note.syncing { color: var(--blue); }
+  .sync-note.synced  { color: var(--green); }
+  .sync-note.failed  { color: var(--red); }
+
+  .btn-primary {
+    padding: 10px 28px; background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary {
+    padding: 10px 28px; background: transparent; color: var(--accent);
+    border: 1.5px solid var(--accent); border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: var(--surface2); }
+  .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; margin-bottom: 1.75rem; }
+  .sum-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .sum-name { font-size: 11px; color: var(--text3); font-weight: 500; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sum-balance { font-size: 20px; font-weight: 600; line-height: 1; }
+  .sum-unit { font-size: 11px; font-weight: 400; color: var(--text3); margin-left: 2px; }
+  .bal-ok   { color: var(--green); }
+  .bal-low  { color: var(--red); }
+  .bal-warn { color: var(--amber); }
+
+  .filter-row { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+  .filter-select {
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 13px; background: var(--surface); color: var(--text);
+    font-family: 'DM Sans', sans-serif; cursor: pointer;
+  }
+  .filter-select:focus { outline: none; border-color: var(--accent); }
+  .btn-export {
+    margin-left: auto; padding: 8px 18px; background: transparent;
+    border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: background 0.15s, color 0.15s;
+  }
+  .btn-export:hover { background: var(--surface); color: var(--text); }
+
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead tr { background: var(--surface2); border-bottom: 1px solid var(--border); }
+  th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text3); white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg); }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-in  { background: var(--green-bg); color: var(--green); }
+  .badge-out { background: var(--red-bg); color: var(--red); }
+  .empty-msg { padding: 3rem; text-align: center; color: var(--text3); font-size: 14px; }
+
+  @media (max-width: 600px) {
+    .container { padding: 1rem; }
+    .header { padding: 0.9rem 1rem; }
+    .gs-input-row { flex-direction: column; align-items: stretch; }
+    .item-grid { grid-template-columns: 1fr 1fr; }
+    .summary-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div>
+      <div class="header-title">Stock Management</div>
+      <div class="header-sub">Inventory Tracker</div>
+    </div>
+      <div class="gs-status-pill">
+  		<span class="gs-dot" id="gs-dot"></span>
+  		<span id="gs-pill-label">Google Sheets connected</span>
+	  </div>>
+  </div>
+  <div class="header-date" id="header-date"></div>
+</div>
+
+<div class="container">
+
+  <!-- Google Sheets setup panel -->
+  <div class="gs-panel" id="gs-panel">
+    <div class="gs-panel-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A4A8A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+      Connect your Google Sheet — one-time setup
+    </div>
+
+    <div class="gs-steps">
+      <div class="gs-step">
+        <div class="gs-step-num">1</div>
+        <div>
+          Open <a href="https://sheets.google.com" target="_blank">Google Sheets</a> and create a new spreadsheet.
+          In <strong>Row 1</strong> add these exact headers (one per column):<br><br>
+          <code>Stock In Date</code> &nbsp;
+          <code>Item Name</code> &nbsp;
+          <code>Type</code> &nbsp;
+          <code>Qty In</code> &nbsp;
+          <code>Stock Used</code> &nbsp;
+          <code>Stock Used Date</code> &nbsp;
+          <code>Balance</code> &nbsp;
+          <code>Unit</code>
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">2</div>
+        <div>In your spreadsheet click <strong>Extensions → Apps Script</strong>. Delete all existing code, paste the script below, then click the <strong>Save</strong> (floppy disk) icon.</div>
+      </div>
+    </div>
+
+    <details>
+      <summary>&#9654; Show Apps Script code to paste</summary>
+      <div class="code-block" id="apps-script-code">const SHEET_NAME = "Sheet1";
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss    = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_NAME) || ss.getActiveSheet();
+
+    if (data.action === "append") {
+      data.rows.forEach(row => sheet.appendRow(row));
+      return ContentService
+        .createTextOutput(JSON.stringify({ status:"ok", added:data.rows.length }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status:"error", message:"Unknown action" }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status:"error", message:err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ status:"ok", message:"Stock API ready" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+      <button class="copy-code-btn" onclick="copyScript()">Copy script</button>
+    </details>
+
+    <div class="gs-steps" style="margin-top:4px">
+      <div class="gs-step">
+        <div class="gs-step-num">3</div>
+        <div>
+          In Apps Script click <strong>Deploy → New deployment</strong>.<br>
+          Set type = <strong>Web app</strong> &nbsp;|&nbsp; Execute as = <strong>Me</strong> &nbsp;|&nbsp; Who has access = <strong>Anyone</strong>.<br>
+          Click <strong>Deploy</strong>, approve permissions when prompted, then copy the <strong>Web app URL</strong>.
+        </div>
+      </div>
+      <div class="gs-step">
+        <div class="gs-step-num">4</div>
+        <div>Paste the Web app URL below and click <strong>Save &amp; Test</strong>.</div>
+      </div>
+    </div>
+
+    <div class="gs-input-row" style="margin-top:12px">
+      <input class="gs-url-input" id="gs-url-input" type="url"
+        placeholder="https://script.google.com/macros/s/AKfyc…/exec" />
+    </div>
+    <div class="gs-test-result" id="gs-test-result"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('in')">&#43; Stock In</button>
+    <button class="tab-btn" onclick="switchTab('out')">&#8722; Stock Out</button>
+    <button class="tab-btn" onclick="switchTab('report')">&#9776; Report</button>
+  </div>
+
+  <!-- Stock In -->
+  <div id="tab-in" class="tab-pane active">
+    <div class="section-label">Enter quantities received today</div>
+    <div class="item-grid" id="in-grid"></div>
+    <div class="action-bar">
+      <span class="sync-note" id="sync-note-in"></span>
+      <span class="toast" id="toast-in">&#10003; Stock In recorded!</span>
+      <button class="btn-primary" id="btn-in" onclick="submitStock('in')">Record Stock In</button>
+    </div>
+  </div>
+
+  <!-- Stock Out -->
+  <div id="tab-out" class="tab-pane">
+    <div class="section-label">Enter quantities used today</div>
+    <div class="item-grid" id="out-grid"></div>
+    <div class="action-bar">
+      <span class="sync-note" id="sync-note-out"></span>
+      <span class="toast" id="toast-out">&#10003; Stock Out recorded!</span>
+      <button class="btn-secondary" id="btn-out" onclick="submitStock('out')">Record Stock Out</button>
+    </div>
+  </div>
+
+  <!-- Report -->
+  <div id="tab-report" class="tab-pane">
+    <div class="section-label">Current balance</div>
+    <div class="summary-grid" id="summary-grid"></div>
+    <div class="section-label">Transaction log</div>
+    <div class="filter-row">
+      <select class="filter-select" id="filter-item" onchange="renderReport()">
+        <option value="">All items</option>
+      </select>
+      <select class="filter-select" id="filter-type" onchange="renderReport()">
+        <option value="">All types</option>
+        <option value="in">Stock In</option>
+        <option value="out">Stock Out</option>
+      </select>
+      <button class="btn-export" onclick="exportCSV()">&#8681; Export CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Stock In Date</th><th>Item Name</th><th>Type</th>
+            <th>Qty In</th><th>Stock Used</th><th>Stock Used Date</th><th>Balance</th>
+          </tr>
+        </thead>
+        <tbody id="report-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── Config ── */
+const ITEMS = [
+  { id:'rice_taj',    name:'Rice – Tajmahala', unit:'kg' },
+  { id:'rice_pusa',   name:'Rice – Pusagold',  unit:'kg' },
+  { id:'rice_finest', name:'Rice – Finest',    unit:'kg' },
+  { id:'oil',         name:'Oil',              unit:'L'  },
+  { id:'milk',        name:'Milk',             unit:'L'  },
+  { id:'ghee',        name:'Ghee',             unit:'kg' },
+  { id:'vegetables',  name:'Vegetables',       unit:'kg' },
+];
+const KEY    = 'stocklog_v2';
+const GS_KEY = 'stocklog_gsurl';
+
+/* ── Storage helpers ── */
+function loadLog()    { try { return JSON.parse(localStorage.getItem(KEY)||'[]'); } catch(e){ return []; } }
+function saveLog(l)   { localStorage.setItem(KEY, JSON.stringify(l)); }
+function getGsUrl()   { return "https://script.google.com/macros/s/AKfycbzD9n9cCRnbRIogzc3yvL4AUVNSSSv2RHkXT7rrVwh_rWfegxYRB8-WppmF01nvMsgwbA/exec"; }
+
+/* ── Google Sheets panel ── */
+let panelOpen = false;
+
+async function updatePill() {
+  const url = getGsUrl();
+
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+
+    if (json.status === "ok") {
+      document.getElementById('gs-dot').className = 'gs-dot connected';
+      document.getElementById('gs-pill-label').textContent = 'Google Sheets connected';
+    }
+  } catch (e) {
+    document.getElementById('gs-dot').className = 'gs-dot error';
+    document.getElementById('gs-pill-label').textContent = 'Connection failed';
+  }
+}
+
+function setTestResult(msg, cls) {
+  const el = document.getElementById('gs-test-result');
+  el.textContent  = msg;
+  el.className    = 'gs-test-result' + (cls ? ' ' + cls : '');
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function copyScript() {
+  const code = document.getElementById('apps-script-code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.querySelector('.copy-code-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
+}
+
+/* ── Sync to Google Sheets ── */
+async function syncRows(rows) {
+  const url = getGsUrl();
+  if (!url || !rows.length) return;
+  await fetch(url, {
+    method:'POST', redirect:'follow',
+    mode:'no-cors',
+    body: JSON.stringify({ action:'append', rows }),
+  });
+}
+
+/* ── Core helpers ── */
+function getBalances(log, upTo) {
+  const b = {};
+  ITEMS.forEach(it => b[it.id] = 0);
+  const slice = upTo == null ? log : log.slice(0, upTo+1);
+  slice.forEach(e => e.items.forEach(({id,qty}) => {
+    b[id] = (b[id]||0) + (e.type==='in' ? qty : -qty);
+  }));
+  return b;
+}
+
+function fmtDT(iso) {
+  if (!iso) return '–';
+  return new Date(iso).toLocaleString('en-MY', {
+    day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'
+  });
+}
+
+function buildGrid(prefix) {
+  document.getElementById(prefix+'-grid').innerHTML = ITEMS.map(it => `
+    <div class="item-card">
+      <div class="item-name" title="${it.name}">${it.name}</div>
+      <div class="input-row">
+        <input class="qty-input" type="number" min="0" step="0.1" placeholder="0" id="${prefix}-${it.id}" />
+        <span class="unit-badge">${it.unit}</span>
+      </div>
+    </div>`).join('');
+}
+
+function showToast(id) {
+  const el = document.getElementById(id);
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 2800);
+}
+
+function setSyncNote(suffix, msg, cls) {
+  const el = document.getElementById('sync-note-'+suffix);
+  el.textContent = msg;
+  el.className   = 'sync-note ' + (cls||'');
+}
+
+/* ── Submit Stock In / Out ── */
+async function submitStock(type) {
+  const prefix = type;
+  const items  = [];
+  ITEMS.forEach(it => {
+    const el = document.getElementById(prefix+'-'+it.id);
+    const v  = parseFloat(el.value);
+    if (v > 0) items.push({ id:it.id, qty:v });
+  });
+  if (!items.length) { alert('Please enter at least one quantity.'); return; }
+
+  const now = new Date().toISOString();
+  const log = loadLog();
+  log.unshift({ type, date:now, items });
+  saveLog(log);
+
+  ITEMS.forEach(it => {
+    const el = document.getElementById(prefix+'-'+it.id);
+    if (el) el.value = '';
+  });
+  showToast('toast-'+type);
+
+  // Google Sheets sync
+  if (getGsUrl()) {
+    const btn = document.getElementById('btn-'+type);
+    btn.disabled = true;
+    setSyncNote(type, '↑ Syncing to Google Sheets…', 'syncing');
+    try {
+      const balances = getBalances(log);
+      const lastIn   = {};
+      [...log].reverse().forEach(e => {
+        if (e.type==='in') e.items.forEach(({id}) => { if (!lastIn[id]) lastIn[id]=e.date; });
+      });
+      const rows = items.map(({id, qty}) => {
+        const it  = ITEMS.find(x => x.id===id);
+        const bal = (balances[id]||0).toFixed(1);
+        return type==='in'
+          ? [fmtDT(now), it.name, 'Stock In', qty.toFixed(1), '', '', bal, it.unit]
+          : [fmtDT(lastIn[id]||''), it.name, 'Stock Out', '', qty.toFixed(1), fmtDT(now), bal, it.unit];
+      });
+      await syncRows(rows);
+      setSyncNote(type, '✓ Saved to Google Sheets', 'synced');
+    } catch(e) {
+      setSyncNote(type, '⚠ Saved locally; Sheets sync failed', 'failed');
+    }
+    btn.disabled = false;
+    setTimeout(() => setSyncNote(type, '', ''), 5000);
+  }
+}
+
+/* ── Report ── */
+async function renderReport() {
+  const url = getGsUrl();
+  if (!url) return;
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify({ action: "getData" })
+  });
+
+  const json = await res.json();
+  if (!json.data) return;
+
+  let rows = json.data.slice(1);
+
+  const filterItem = document.getElementById('filter-item').value;
+  const filterType = document.getElementById('filter-type').value;
+
+  if (filterItem) {
+    const name = ITEMS.find(i=>i.id===filterItem)?.name;
+    rows = rows.filter(r => r[1] === name);
+  }
+
+  if (filterType) {
+    rows = rows.filter(r => r[2].toLowerCase().includes(filterType));
+  }
+
+  const tbody = document.getElementById("report-body");
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-msg">No data</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r[0]}</td>
+      <td><strong>${r[1]}</strong></td>
+      <td>${r[2]}</td>
+      <td>${r[3] || "-"}</td>
+      <td>${r[4] || "-"}</td>
+      <td>${r[5] || "-"}</td>
+      <td>${r[6]}</td>
+    </tr>
+  `).join("");
+}
+
+function exportCSV() {
+  const log  = loadLog();
+  const rows = [['Stock In Date','Item Name','Type','Qty In','Stock Used','Stock Used Date','Balance','Unit']];
+  const rb={}, li={};
+  ITEMS.forEach(it=>rb[it.id]=0);
+  [...log].reverse().forEach(e => {
+    e.items.forEach(({id,qty}) => {
+      const it=ITEMS.find(x=>x.id===id);
+      if (e.type==='in') {
+        rb[id]=(rb[id]||0)+qty; li[id]=e.date;
+        rows.push([fmtDT(e.date), it.name, 'Stock In', qty.toFixed(1),'','', rb[id].toFixed(1), it.unit]);
+      } else {
+        rb[id]=(rb[id]||0)-qty;
+        rows.push([fmtDT(li[id]||''), it.name, 'Stock Out','', qty.toFixed(1), fmtDT(e.date), rb[id].toFixed(1), it.unit]);
+      }
+    });
+  });
+  const csv  = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'stock_report_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+async function loadDashboard() {
+  const url = getGsUrl();
+  if (!url) return;
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify({ action: "getDashboard" })
+  });
+
+  const json = await res.json();
+  const balances = json.balances || {};
+
+  const sg = document.getElementById("summary-grid");
+
+  sg.innerHTML = ITEMS.map(it => {
+    const val = balances[it.name] || 0;
+
+    const cls = val <= 0 ? "bal-low"
+              : val < 5 ? "bal-warn"
+              : "bal-ok";
+
+    return `
+      <div class="sum-card">
+        <div class="sum-name">${it.name}</div>
+        <div class="sum-balance ${cls}">
+          ${val.toFixed(1)} <span class="sum-unit">${it.unit}</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  checkLowStock(balances);
+}
+
+function checkLowStock(balances) {
+  Object.keys(balances).forEach(item => {
+    if (balances[item] < 5) {
+      console.warn("LOW STOCK:", item);
+    }
+  });
+}
+/* ── Tabs ── */
+function switchTab(t) {
+  document.querySelectorAll('.tab-pane').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.querySelectorAll('.tab-btn')[['in','out','report'].indexOf(t)].classList.add('active');
+  if (t==='report') {
+    document.getElementById('filter-item').innerHTML =
+      '<option value="">All items</option>'+
+      ITEMS.map(it=>`<option value="${it.id}">${it.name}</option>`).join('');
+    loadDashboard();
+	renderReport();
+  }
+}
+
+/* ── Init ── */
+document.getElementById('header-date').innerHTML =
+  new Date().toLocaleDateString('en-MY',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) +
+  '<br>' + new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
+
+buildGrid('in');
+buildGrid('out');
+updatePill();
+setInterval(() => {
+  loadDashboard();
+  renderReport();
+}, 10000);
+</script>
+</body>
+</html>
+
+
 v1
 const SHEET_NAME = "stock";
 
@@ -103,3 +827,5 @@ function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+
