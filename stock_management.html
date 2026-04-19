@@ -434,7 +434,7 @@ const GS_KEY = 'stocklog_gsurl';
 /* ── Storage helpers ── */
 function loadLog()    { try { return JSON.parse(localStorage.getItem(KEY)||'[]'); } catch(e){ return []; } }
 function saveLog(l)   { localStorage.setItem(KEY, JSON.stringify(l)); }
-function getGsUrl()   { return "https://script.google.com/macros/s/AKfycbzD9n9cCRnbRIogzc3yvL4AUVNSSSv2RHkXT7rrVwh_rWfegxYRB8-WppmF01nvMsgwbA/exec"; }
+function getGsUrl()   { return "https://script.google.com/macros/s/AKfycbxsg_Nc_BVrWHhNB0904QFzT2zlvYjgBF-hsJmXdXHEYFqJW3JyimP7rhcDuGxQKJFKUA/exec"; }
 
 /* ── Google Sheets panel ── */
 let panelOpen = false;
