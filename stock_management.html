@@ -1,228 +1,294 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stock Management</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stock Management System</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
 <style>
-body { font-family: 'Segoe UI'; background:#f5f3ef; margin:0; }
+:root {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE6;
+  --border: #E2DDD5;
+  --text: #1A1814;
+  --text2: #6B6458;
+  --text3: #9E9688;
+  --green: #2D6A4F;
+  --red: #9B2226;
+  --amber: #7D4E00;
+  --accent: #3D2B1F;
+  --radius: 12px;
+}
 
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  margin: 0;
+}
+
+/* HEADER */
 .header {
-  background:#5b3a2e;
-  color:#fff;
-  padding:15px 20px;
+  background: var(--accent);
+  color: #fff;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.container { padding:20px; }
+.header-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.3rem;
+}
 
-.card {
-  background:#fff;
-  border-radius:12px;
-  padding:15px;
+/* FIXED HEADER BUG */
+.gs-status-pill {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+}
+.gs-dot {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#5DD47A;
+}
+
+/* LAYOUT */
+.container {
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
+}
+
+/* TABS */
+.tabs {
+  display:flex;
+  gap:5px;
   margin-bottom:20px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
-
-h3 { margin-bottom:10px; }
-
-input, select {
-  padding:8px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  margin-right:10px;
-}
-
-button {
-  background:#5b3a2e;
-  color:#fff;
+.tab-btn {
+  flex:1;
+  padding:10px;
   border:none;
-  padding:10px 15px;
-  border-radius:6px;
+  border-radius:8px;
+  background:#eee;
   cursor:pointer;
 }
+.tab-btn.active {
+  background:#fff;
+}
 
-.dashboard {
-  display:flex;
-  flex-wrap:wrap;
+/* GRID */
+.item-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
   gap:10px;
 }
 
-.tile {
-  background:#f8f6f2;
-  padding:12px;
-  border-radius:8px;
-  min-width:140px;
+/* CARDS */
+.item-card {
+  background:#fff;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
 }
 
-.low { color:red; font-weight:bold; }
+.qty-input {
+  width:100%;
+  padding:6px;
+}
 
+/* BUTTON */
+.btn-primary {
+  background:var(--accent);
+  color:#fff;
+  padding:10px 20px;
+  border:none;
+  border-radius:8px;
+}
+
+/* DASHBOARD */
+.summary-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:10px;
+}
+.sum-card {
+  background:#fff;
+  padding:10px;
+  border-radius:10px;
+}
+.bal-ok { color:var(--green); }
+.bal-low { color:var(--red); }
+.bal-warn { color:var(--amber); }
+
+/* TABLE */
 table {
   width:100%;
   border-collapse:collapse;
 }
-
 th, td {
-  border:1px solid #ddd;
   padding:8px;
+  border:1px solid #ddd;
 }
-
-th { background:#eee; }
 </style>
 </head>
 
 <body>
 
 <div class="header">
-<h2>Stock Management</h2>
+  <div class="header-title">Stock Management</div>
+
+  <!-- FIXED HEADER -->
+  <div class="gs-status-pill">
+    <span class="gs-dot"></span>
+    <span>Google Sheets connected</span>
+  </div>
 </div>
 
 <div class="container">
 
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('in')">Stock In</button>
+  <button class="tab-btn" onclick="switchTab('out')">Stock Out</button>
+  <button class="tab-btn" onclick="switchTab('report')">Report</button>
+</div>
+
 <!-- STOCK IN -->
-<div class="card">
-<h3>Stock In</h3>
-
-<select id="item-in" onchange="toggleNew('in')"></select>
-<input type="text" id="new-item-in" placeholder="New Item" style="display:none">
-<input type="number" id="qty-in" placeholder="Quantity">
-<button onclick="submitStock('in')">Add Stock</button>
-
+<div id="tab-in">
+  <div class="item-grid" id="in-grid"></div>
+  <button class="btn-primary" onclick="submitStock('in')">Record Stock In</button>
 </div>
 
 <!-- STOCK OUT -->
-<div class="card">
-<h3>Stock Out</h3>
-
-<select id="item-out" onchange="toggleNew('out')"></select>
-<input type="text" id="new-item-out" placeholder="New Item" style="display:none">
-<input type="number" id="qty-out" placeholder="Quantity">
-<input type="text" id="branch" placeholder="Branch Name">
-<button onclick="submitStock('out')">Consume Stock</button>
-
-</div>
-
-<!-- DASHBOARD -->
-<div class="card">
-<h3>Current Balance</h3>
-<div id="dashboard" class="dashboard"></div>
+<div id="tab-out" style="display:none;">
+  <div class="item-grid" id="out-grid"></div>
+  <button class="btn-primary" onclick="submitStock('out')">Record Stock Out</button>
 </div>
 
 <!-- REPORT -->
-<div class="card">
-<h3>Report</h3>
-<table>
-<thead>
-<tr>
-<th>Date</th><th>Item</th><th>Type</th>
-<th>Qty In</th><th>Qty Out</th><th>Branch</th><th>Balance</th>
-</tr>
-</thead>
-<tbody id="report"></tbody>
-</table>
+<div id="tab-report" style="display:none;">
+  <h3>Current Balance</h3>
+  <div class="summary-grid" id="summary-grid"></div>
+
+  <h3>Report</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th><th>Item</th><th>Type</th>
+        <th>In</th><th>Out</th><th>Date</th><th>Balance</th>
+      </tr>
+    </thead>
+    <tbody id="report-body"></tbody>
+  </table>
 </div>
 
 </div>
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbw7T6oEIadG3L5eejok79dJLbZ4twuUV8BErKDyFnf-A8XHOieELLorZ8-r-_nmT2x4Sw/exec";
+/* CONFIG */
+const API = "https://script.google.com/macros/s/AKfycbXXXXXXXX/exec";
 
-let ITEMS = [
-"Rice – Tajmahala","Rice – Pusagold","Rice – Finest",
-"Oil","Milk","Ghee","Vegetables"
+const ITEMS = [
+  {id:'rice_taj', name:'Rice – Tajmahala', unit:'kg'},
+  {id:'rice_pusa', name:'Rice – Pusagold', unit:'kg'},
+  {id:'rice_finest', name:'Rice – Finest', unit:'kg'},
+  {id:'oil', name:'Oil', unit:'L'},
+  {id:'milk', name:'Milk', unit:'L'},
+  {id:'ghee', name:'Ghee', unit:'kg'},
+  {id:'vegetables', name:'Vegetables', unit:'kg'}
 ];
 
-function init(){
-  renderItems();
-  loadDashboard();
-  loadReport();
-}
-init();
-
-function renderItems(){
-  const opts = ITEMS.map(i=>`<option>${i}</option>`).join("") +
-               `<option value="NEW">+ Add New Item</option>`;
-
-  document.getElementById("item-in").innerHTML = opts;
-  document.getElementById("item-out").innerHTML = opts;
-}
-
-function toggleNew(type){
-  const val = document.getElementById("item-"+type).value;
-  document.getElementById("new-item-"+type).style.display =
-    val==="NEW"?"block":"none";
-}
-
-async function submitStock(type){
-
-  let item = document.getElementById("item-"+type).value;
-  const newItem = document.getElementById("new-item-"+type).value;
-
-  if(item==="NEW"){
-    item = newItem;
-    if(!ITEMS.includes(item)){
-      ITEMS.push(item);
-      renderItems();
-    }
-  }
-
-  const qty = Number(document.getElementById("qty-"+type).value);
-  const branch = document.getElementById("branch").value;
-
-  if(!qty) return alert("Enter quantity");
-
-  // NEGATIVE CHECK
-  if(type==="out"){
-    const res = await fetch(API,{method:"POST",body:JSON.stringify({action:"getDashboard"})});
-    const data = await res.json();
-
-    if((data.balances[item]||0) < qty){
-      alert("❌ Not enough stock");
-      return;
-    }
-  }
-
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"append",
-      rows:[[
-        new Date().toISOString(),
-        item,
-        type==="in"?"Stock In":"Stock Out",
-        type==="in"?qty:"",
-        type==="out"?qty:"",
-        new Date().toISOString(),
-        branch,
-        ""
-      ]]
-    })
-  });
-
-  loadDashboard();
-  loadReport();
-}
-
-async function loadDashboard(){
-  const res = await fetch(API,{method:"POST",body:JSON.stringify({action:"getDashboard"})});
-  const data = await res.json();
-
-  document.getElementById("dashboard").innerHTML =
-    Object.keys(data.balances).map(k=>`
-      <div class="tile">
-        ${k}<br>
-        <span class="${data.balances[k]<5?'low':''}">
-          ${data.balances[k]}
-        </span>
+/* BUILD GRID */
+function buildGrid(prefix){
+  document.getElementById(prefix+'-grid').innerHTML =
+    ITEMS.map(it=>`
+      <div class="item-card">
+        ${it.name}<br>
+        <input type="number" id="${prefix}-${it.id}" class="qty-input" placeholder="0">
       </div>
     `).join("");
 }
 
-async function loadReport(){
-  const res = await fetch(API,{method:"POST",body:JSON.stringify({action:"getData"})});
+/* SWITCH TAB */
+function switchTab(t){
+  ['in','out','report'].forEach(x=>{
+    document.getElementById('tab-'+x).style.display = (x===t?'block':'none');
+  });
+
+  if(t==='report'){
+    loadDashboard();
+    renderReport();
+  }
+}
+
+/* SUBMIT */
+async function submitStock(type){
+  const rows = [];
+  const now = new Date().toISOString();
+
+  ITEMS.forEach(it=>{
+    const v = Number(document.getElementById(type+'-'+it.id).value);
+    if(v>0){
+      rows.push([
+        now,
+        it.name,
+        type==='in'?'Stock In':'Stock Out',
+        type==='in'?v:'',
+        type==='out'?v:'',
+        now,
+        '',
+        ''
+      ]);
+    }
+  });
+
+  await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain"},
+    body:JSON.stringify({action:"append", rows})
+  });
+
+  alert("Saved");
+}
+
+/* DASHBOARD */
+async function loadDashboard(){
+  const res = await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain"},
+    body:JSON.stringify({action:"getDashboard"})
+  });
+
   const data = await res.json();
 
-  document.getElementById("report").innerHTML =
+  document.getElementById("summary-grid").innerHTML =
+    ITEMS.map(it=>{
+      const val = data.balances[it.name] || 0;
+      const cls = val<=0?'bal-low':val<5?'bal-warn':'bal-ok';
+
+      return `<div class="sum-card">${it.name}<br><b class="${cls}">${val}</b></div>`;
+    }).join("");
+}
+
+/* REPORT */
+async function renderReport(){
+  const res = await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain"},
+    body:JSON.stringify({action:"getData"})
+  });
+
+  const data = await res.json();
+
+  document.getElementById("report-body").innerHTML =
     data.data.slice(1).map(r=>`
       <tr>
         <td>${r[0]}</td>
@@ -230,11 +296,15 @@ async function loadReport(){
         <td>${r[2]}</td>
         <td>${r[3]}</td>
         <td>${r[4]}</td>
-        <td>${r[6] || '-'}</td>
-        <td>${r[7] || ''}</td>
+        <td>${r[5]}</td>
+        <td>${r[6]}</td>
       </tr>
     `).join("");
 }
+
+/* INIT */
+buildGrid('in');
+buildGrid('out');
 
 </script>
 
